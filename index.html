@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Gusty Gus</title>
+    	<style type="text/css">
+      		canvas { border: 3px solid black; }
+    	</style>
+
+	<script type="text/javascript">
+
+	// Global variable here
+	var ctx;
+	
+	var dx = 5;
+	var dy = 5;
+	
+	var x = 150;
+	var y = 100;
+	
+	var radius = 10;
+
+	var WIDTH = 300;
+	var HEIGHT = 600;
+	
+	var interval = 10;
+ 	var canvas;
+	var intervalId = 0;
+	
+	var rightDown = false;
+	var leftDown = false;
+	var fac=1;
+	var shiftkey = false;
+        
+        var points = 0;
+        var speed = (1/2);
+        var barh = 20;
+        
+        var startScreen = new Image();
+        startScreen.src = "img/start.png";
+
+        var background = new Image();
+        background.src = "img/background.png";
+        
+        var speedbar = new Image();
+        speedbar.src = "img/speed1.png";
+        var speedbarx = 200;
+        var speedbary = 3;
+        var speedbarstage = 0;
+        
+        var gus = new Image();
+        gus.src = "img/gus.png";
+        var gusw = 30;
+        var gush = 30;
+        var gusturned = false;
+        
+        var coin = new Image();
+        coin.src = "img/coin.png";
+        var coinexists = false;
+        var coinx = 0;
+        var coiny = 0;
+        var coinw = 20;
+        var coinh = 20;
+        
+        var boom = new Image();
+        boom.src = "img/boom.png";
+        var boomx = 0;
+        var boomy = 0;
+        var boomcounter = 0;
+        var boomexists;
+        var bombw = 30;
+        var bombh = 30;
+        
+        var bomb1 = new Image();
+        bomb1.src = "img/bomb.png";
+        var bomb1exists = false;
+        var bomb1x = 0;
+        var bomb1y = 0;
+        
+        var bomb2 = new Image();
+        bomb2.src = "img/bomb.png";
+        var bomb2exists = false;
+        var bomb2x = 0;
+        var bomb2y = 0;
+         
+        var bomb3 = new Image();
+        bomb3.src = "img/bomb.png";
+        var bomb3exists = false;
+        var bomb3x = 0;
+        var bomb3y = 0;
+        
+        var bombmodifier1 = (Math.random()*(1/4));
+        var bombmodifier2 = (Math.random()*(1/4));
+        var bombmodifier3 = (Math.random()*(1/4));
+        
+        var fan1 = new Image();
+        fan1.src = "img/fan1.png";
+        var fan1x = 0;
+        var fan1y = barh;
+        var fan1counter = 0;
+        var fan1stage = 0;
+        
+        var fan2 = new Image();
+        fan2.src = "img/fan2.png";
+        var fan2x = 60;
+        var fan2y = barh;
+        var fan2counter = 0;
+        var fan2stage = 1;
+        
+        var fan3 = new Image();
+        fan3.src = "img/fan3.png";
+        var fan3x = 190;
+        var fan3y = barh;
+        var fan3counter = 0;
+        var fan3stage = 2;
+        
+        var fan4 = new Image();
+        fan4.src = "img/fan3.png";
+        var fan4x = 250;
+        var fan4y = barh;
+        var fan4counter = 0;
+        var fan4stage = 3;
+        
+        
+        var exit = new Image();
+        exit.src = "img/exit.png";
+        var exitx = 135;
+        var exity = barh;
+        
+        var end = new Image();
+        end.src = "img/end.png";
+        
+        var gamestart = false;
+        var gameover = false;
+
+	// movement via arrow keys
+	function onKeyDown(evt) 
+	{		
+		switch (evt.keyCode) 
+		{
+                    
+                      case 32:  /* Space was pressed */
+                                        
+                                        if(!gamestart){
+                                            speed = (1/2);
+                                            speedbar.src = "img/speed1.png";
+                                            speedbarstage = 0;
+                                            gamestart = true;
+                                        }
+                                        
+                                        if(gameover){
+                                            points = 0;
+                                            gameover = false;
+                                        }
+			
+					break;
+                                        
+			case 38:  /* Up arrow was pressed */
+			       
+					if( y - dy > barh )   		// can we go up if yes
+					{
+                                                
+						y -= 1.5 * dy; // GO UP 
+					}
+			
+					break;
+				
+			case 40:  /* Down arrow was pressed */
+					if	 (y + dy < HEIGHT - radius/2)  // are we below the floor?
+					{
+						if (evt.shiftKey) fac = 10;
+						else fac = 1;
+						y += fac * dy;  // Go DOWN
+					}
+		
+					break;
+					
+			case 37:  /* Left arrow was pressed */
+					if ( x - dx > 0 )
+					{
+						if (evt.shiftKey){
+                                                    if( y - dy > 20 )   		// can we go up if yes
+                                                    {
+                                                        y -= fac * dy; // GO UP 
+                                                    }
+                                                }
+                                                if(!gusturned){
+                                                    gus.src = "img/gusturned.png";
+                                                    gusturned = true;
+                                                }
+						x -= fac * dx; 			// Go LEFT
+					}
+			
+					break;
+			case 39:  /* Right arrow was pressed */
+					if (x + dx +gusw < WIDTH)
+					{
+						if (evt.shiftKey){
+                                                    if( y - dy > 20 )   		// can we go up if yes
+                                                    {
+                                                        y -= fac * dy; // GO UP 
+                                                    }
+                                                }
+                                                if (gusturned){
+                                                    gus.src = "img/gus.png";
+                                                    gusturned = false;
+                                                }
+						x += fac * dx; // Go RIGHT
+					}
+			
+					break;				
+			
+			} // end switch
+			
+				
+		} // end function
+	
+	function init()
+	{
+            //basic starting set up
+	ctx = document.getElementById('canvas').getContext('2d');
+	canvas = document.getElementById('canvas');
+
+	WIDTH = ctx.canvas.width; 
+  	HEIGHT = ctx.canvas.height;
+        
+	window.addEventListener('keydown',onKeyDown,true);
+	
+            setInterval( draw, interval );
+            setInterval( increasespeed, 10000);
+    }
+    
+            
+    //used to increase the speed value which affects a lot
+    //also, updates the wind speed meter
+        function increasespeed(){
+           if(speed <= 1.50){
+                speed = speed*(1.25);
+                
+                if(speedbarstage == 0){
+                    speedbar.src = "img/speed2.png";
+                    speedbarstage = 1;
+                }
+                else if(speedbarstage == 1){
+                    speedbar.src = "img/speed3.png";
+                    speedbarstage = 2;
+                }
+                else if(speedbarstage == 2){
+                    speedbar.src = "img/speed4.png";
+                    speedbarstage = 3;
+                }
+                else if(speedbarstage == 3){
+                    speedbar.src = "img/speed4.png";
+                    speedbarstage = 4;
+                }
+                else if(speedbarstage == 4){
+                    speedbar.src = "img/speed5.png";
+                    speedbarstage = 5;
+                }
+                else if(speedbarstage >= 5){
+                    speedbar.src = "img/speed1.png";
+                    speedbarstage = 0;
+                }
+            }
+        }
+
+	function clear() 
+	{
+  	ctx.clearRect(0, 0, WIDTH, HEIGHT);
+	}
+
+//draw handles basically everything. it is the refresher
+	function draw()
+	{
+        //before starting
+        if(!gamestart)
+        {
+            clear();
+            ctx.drawImage(startScreen, 0, 0);
+        }
+        
+        else{
+            //holds the game over screen and resets
+            if(gameover){
+                clear();
+                ctx.drawImage(end, 0, 0);
+                bomb1exists = false;
+                bomb1y= 0;
+                bomb2exists = false;
+                bomb2y = 0;
+                bomb3exists = false;
+                bomb3y = 0;
+                coinexists = false;
+                x =  150;
+                y = 100;
+                speed = (1/2);
+                speedbar.src = "img/speed1.png";
+                speedbarstage = 0;
+                
+                ctx.font = "bold 50px Terminal";
+                ctx.fillStyle = "white";
+                ctx.fillText( "$" + points, 125, 400);
+            }
+            
+            //this else contains much of the actual game
+            else{    
+	clear();
+        ctx.drawImage(background, 0, 0); 
+        
+	ctx.font = "bold 20px Terminal";
+	ctx.fillStyle = "white";
+        ctx.fillText( "$" + points, 1, 18);
+        
+        ctx.drawImage(speedbar, speedbarx, speedbary);
+        
+        y = y+speed;
+        ctx.drawImage(gus, x ,y);
+        
+        //touch spikes
+        if ( y >= (HEIGHT-gush) ){
+                gameover = true;
+        }
+        
+        //touch exit
+        if ( (y <= 20) && (x < 149) && (x > 118) ){
+                points = points*2;
+                gameover = true;
+        }
+
+
+//coin stuff
+        //randomly generates coin location
+        if(!coinexists){
+            coinx = (Math.random()*(WIDTH-coinw))+1;
+            coiny = (Math.random()*(HEIGHT-(coinh+60)))+barh;
+            ctx.drawImage(coin, coinx, coiny);
+            coinexists = true;
+        }
+        else{
+            ctx.drawImage(coin, coinx, coiny);
+        }
+        //coin touches gus
+        if ((( x > coinx )           && ( x < coinx + coinw )           && ( y > coiny )           && ( y < coiny + coinh )) ||
+		      (( x > coinx )           && ( x < coinx + coinw )           && ( y + gush > coiny ) && ( y + gush < coiny + coinh )) ||
+		      (( x + gusw > coinx ) && ( x + gusw < coinx + coinw ) && ( y + gush > coiny ) && ( y + gush < coiny + coinh )) ||
+		      (( x + gusw > coinx ) && ( x + gusw < coinx + coinw ) && ( y > coiny )           && ( y < coiny + coinh )) ||
+		      (( coinx > x )         && ( coinx < x + gusw )         && ( coiny > y )         && ( coiny < y + gush )) ||
+		      (( coinx > x )         && ( coinx < x + gusw )         && ( coiny + coinh > y ) && ( coiny + coinh < y + gush )) ||
+		      (( coinx + coinw > x ) && ( coinx + coinw < x + gusw ) && ( coiny + coinh > y ) && ( coiny + coinh < y + gush )) ||
+		      (( coinx + coinw > x ) && ( coinx + coinw < x + gusw ) && ( coiny > y )         && ( coiny < y + gush ))){
+                  coinexists = false;
+                  points++;
+        }
+        
+        
+//bomb stuff
+        
+        //randomly finds the x coordinate for the bomb
+        //y coordinate is set (top of screen)
+        if(!bomb1exists){
+            bomb1x = ((Math.random()*(WIDTH-bombw))+1);
+            ctx.drawImage(bomb1, bomb1x, 0);
+            bomb1exists = true;
+
+        }
+        //modifier is randomly generated to give each bomb a slightly
+        //different speed. this tested better than just starting the 
+        //bombs out at different times
+        else{
+            bomb1y = bomb1y+speed+bombmodifier1;
+            ctx.drawImage(bomb1, bomb1x, bomb1y);
+        }
+        //bomb hits spikes
+        if (bomb1y >= HEIGHT){
+            bomb1exists = false;
+            bomb1y = 0;
+        }
+        //gus is hit by bomb
+        if ((( x > bomb1x )           && ( x < bomb1x + coinw )           && ( y > bomb1y )           && ( y < bomb1y + coinh )) ||
+		      (( x > bomb1x )           && ( x < bomb1x + coinw )           && ( y + gush > bomb1y ) && ( y + gush < bomb1y + coinh )) ||
+		      (( x + gusw > bomb1x ) && ( x + gusw < bomb1x + coinw ) && ( y + gush > bomb1y ) && ( y + gush < bomb1y + coinh )) ||
+		      (( x + gusw > bomb1x ) && ( x + gusw < bomb1x + coinw ) && ( y > bomb1y )           && ( y < bomb1y + coinh )) ||
+		      (( bomb1x > x )         && ( bomb1x < x + gusw )         && ( bomb1y > y )         && ( bomb1y < y + gush )) ||
+		      (( bomb1x > x )         && ( bomb1x < x + gusw )         && ( bomb1y + coinh > y ) && ( bomb1y + coinh < y + gush )) ||
+		      (( bomb1x + coinw > x ) && ( bomb1x + coinw < x + gusw ) && ( bomb1y + coinh > y ) && ( bomb1y + coinh < y + gush )) ||
+		      (( bomb1x + coinw > x ) && ( bomb1x + coinw < x + gusw ) && ( bomb1y > y )         && ( bomb1y < y + gush ))){
+                  bomb1exists = false;
+                  boomx = bomb1x;
+                  boomy = bomb1y;
+                  boomexists = true; //the explosion animation is triggered by this
+                  bomb1y = 0;
+                  points = Math.floor(points/2);
+        }
+        
+        
+        if(!bomb2exists){
+            bomb2x = ((Math.random()*(WIDTH-bombw))+1);
+            ctx.drawImage(bomb2, bomb2x, 0);
+            bomb2exists = true;
+        }
+        else{
+            bomb2y = bomb2y+speed+bombmodifier2;
+            ctx.drawImage(bomb2, bomb2x, bomb2y);
+        }
+        if (bomb2y >= HEIGHT){
+            bomb2exists = false;
+            bomb2y = 0;
+        }
+        
+        if ((( x > bomb2x )           && ( x < bomb2x + coinw )           && ( y > bomb2y )           && ( y < bomb2y + coinh )) ||
+		      (( x > bomb2x )           && ( x < bomb2x + coinw )           && ( y + gush > bomb2y ) && ( y + gush < bomb2y + coinh )) ||
+		      (( x + gusw > bomb2x ) && ( x + gusw < bomb2x + coinw ) && ( y + gush > bomb2y ) && ( y + gush < bomb2y + coinh )) ||
+		      (( x + gusw > bomb2x ) && ( x + gusw < bomb2x + coinw ) && ( y > bomb2y )           && ( y < bomb2y + coinh )) ||
+		      (( bomb2x > x )         && ( bomb2x < x + gusw )         && ( bomb2y > y )         && ( bomb2y < y + gush )) ||
+		      (( bomb2x > x )         && ( bomb2x < x + gusw )         && ( bomb2y + coinh > y ) && ( bomb2y + coinh < y + gush )) ||
+		      (( bomb2x + coinw > x ) && ( bomb2x + coinw < x + gusw ) && ( bomb2y + coinh > y ) && ( bomb2y + coinh < y + gush )) ||
+		      (( bomb2x + coinw > x ) && ( bomb2x + coinw < x + gusw ) && ( bomb2y > y )         && ( bomb2y < y + gush ))){
+                  bomb2exists = false;
+                  boomx = bomb2x;
+                  boomy = bomb2y;
+                  boomexists = true;
+                  bomb2y = 0;
+                  points = Math.floor(points/2);
+                  
+        }
+        
+        if(!bomb3exists){
+            bomb3x = ((Math.random()*(WIDTH-bombw))+1);
+            ctx.drawImage(bomb3, bomb3x, 0);
+            bomb3exists = true;
+        }
+        else{
+            bomb3y = bomb3y+speed+bombmodifier3;
+            ctx.drawImage(bomb3, bomb3x, bomb3y);
+        }
+        if (bomb3y >= HEIGHT){
+            bomb3exists = false;
+            bomb3y = 0;
+        }
+        
+        if ((( x > bomb3x )           && ( x < bomb3x + coinw )           && ( y > bomb3y )           && ( y < bomb3y + coinh )) ||
+		      (( x > bomb3x )           && ( x < bomb3x + coinw )           && ( y + gush > bomb3y ) && ( y + gush < bomb3y + coinh )) ||
+		      (( x + gusw > bomb3x ) && ( x + gusw < bomb3x + coinw ) && ( y + gush > bomb3y ) && ( y + gush < bomb3y + coinh )) ||
+		      (( x + gusw > bomb3x ) && ( x + gusw < bomb3x + coinw ) && ( y > bomb3y )           && ( y < bomb3y + coinh )) ||
+		      (( bomb3x > x )         && ( bomb3x < x + gusw )         && ( bomb3y > y )         && ( bomb3y < y + gush )) ||
+		      (( bomb3x > x )         && ( bomb3x < x + gusw )         && ( bomb3y + coinh > y ) && ( bomb3y + coinh < y + gush )) ||
+		      (( bomb3x + coinw > x ) && ( bomb3x + coinw < x + gusw ) && ( bomb3y + coinh > y ) && ( bomb3y + coinh < y + gush )) ||
+		      (( bomb3x + coinw > x ) && ( bomb3x + coinw < x + gusw ) && ( bomb3y > y )         && ( bomb3y < y + gush ))){
+                  bomb3exists = false;
+                  boomx = bomb3x;
+                  boomy = bomb3y;
+                  boomexists = true;
+                  bomb3y = 0;
+                  points = Math.floor(points/2);
+                  
+              }
+              
+            if(boomexists){
+            ctx.drawImage(boom, boomx, boomy);
+            boomcounter++;
+            if(boomcounter > 10){
+                boomexists = false;
+                boomcounter = 0;
+            }
+        }
+              
+//fan stuff
+        //used to animate the fans
+        function fanCycler(fan, fanstage){
+            if(fanstage == 0){
+                fan.src = "img/fan2.png";
+            }
+            else if(fanstage == 1){
+                fan.src = "img/fan3.png";
+            }
+            else if(fanstage == 2){
+                fan.src = "img/fan4.png";
+            }
+            else if(fanstage == 3){
+                fan.src = "img/fan1.png";
+            }
+        }
+        
+        ctx.drawImage(fan1, fan1x, fan1y);
+        fan1counter++;
+        //exponents are used here because I wanted the fans to start out
+        //slow and get very, very fast by the end. counters used in 
+        //conjuction with division by the speed variable to animate
+        if (fan1counter >= (20/(Math.pow(speed,2)))){
+            fanCycler(fan1, fan1stage);
+            fan1counter = 0;
+            fan1stage++;
+            if (fan1stage > 3){
+                fan1stage = 0;
+            }
+        }
+        
+        ctx.drawImage(fan2, fan2x, fan2y);
+        fan2counter++;
+        if (fan2counter >= (20/(Math.pow(speed,2)))){
+            fanCycler(fan2, fan2stage);
+            fan2counter = 0;
+            fan2stage++;
+            if (fan2stage > 3){
+                fan2stage = 0;
+            }
+        }
+        
+        ctx.drawImage(fan3, fan3x, fan3y);
+        fan3counter++;
+        if (fan3counter >= (20/(Math.pow(speed,2)))){
+            fanCycler(fan3, fan3stage);
+            fan3counter = 0;
+            fan3stage++;
+            if (fan3stage > 3){
+                fan3stage = 0;
+            }
+        }
+        
+        ctx.drawImage(fan4, fan4x, fan4y);
+        fan4counter++;
+        if (fan4counter >= (20/(Math.pow(speed,2)))){
+            fanCycler(fan4, fan4stage);
+            fan4counter = 0;
+            fan4stage++;
+            if (fan4stage > 3){
+                fan4stage = 0;
+            }
+        }
+
+        
+        }
+    }
+	}
+
+
+</script>
+</head>
+<body onload="init()">
+<canvas id="canvas" width="300" height="600">
+Your browser does not support the canvas element.
+</canvas>
+
+    
+</body>
+</html>
